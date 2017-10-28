@@ -142,12 +142,7 @@ $(document).ready( function() {
 	}
 
 	console.log(path);
-
-	//Test draw a line from a to b
-	//ctx.moveTo(coords[0][0], coords[0][1]);
-	//ctx.lineTo(coords[1][0], coords[1][1]);
-	//ctx.stroke();
-
+	
 	//Draw the edges
 	for (var i = 0; i < edges.length; i++) {
 		//Get the current vertex

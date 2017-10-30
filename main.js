@@ -80,8 +80,6 @@ $(document).ready( function() {
 				//Alphabetize the whole array
 				edges.sort();
 
-				console.log(edges);
-
 				//Count degrees for each edge
 				for (var i = 0; i < vertices.length; i++) {
 					degrees[i] = 0;
@@ -99,6 +97,8 @@ $(document).ready( function() {
 					}
 				});
 			} while(numOddDegrees != 2);
+
+			console.log(edges);
 
 			switch (numOddDegrees) {
 				case 2:
@@ -132,6 +132,7 @@ $(document).ready( function() {
 				}
 
 				//Display the start vertex
+				ctx.font = "20px Courier New";
 				ctx.fillText("START", coords[vertex.charCodeAt(0) - 97][0], coords[vertex.charCodeAt(0) - 97][1])
 
 				//Draw the edges
@@ -157,9 +158,14 @@ $(document).ready( function() {
 					var index = edges.indexOf(path[i]);
 					edges.splice(index, 1);
 				});
+
+				//Display the end vertex
+				ctx.font = "20px Courier New";
+				ctx.fillText("END", coords[vertex.charCodeAt(0) - 97][0], coords[vertex.charCodeAt(0) - 97][1])
 			}
 
 			console.log(path);
+			console.log(' ');
 		}
 	});
 });

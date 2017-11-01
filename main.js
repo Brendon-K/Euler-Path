@@ -58,8 +58,8 @@ $(document).ready( function() {
 				ctx.stroke();
 				ctx.closePath();
 				ctx.font = "15px Courier New";
-				x = x0 + (1.05 * r) * Math.cos(2 * Math.PI * i / vertices.length);
-				y = y0 + (1.05 * r) * Math.sin(2 * Math.PI * i / vertices.length);
+				x = x0 + (7 + r) * Math.cos(2 * Math.PI * i / vertices.length);
+				y = y0 + (7 + r) * Math.sin(2 * Math.PI * i / vertices.length);
 				ctx.fillText(vertices[i],x-4,y+5);
 			}
 

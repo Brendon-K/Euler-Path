@@ -11,8 +11,9 @@ $(document).ready( function() {
 			var degrees = [];
 			var numOddDegrees = 0;
 			var possiblePath = false;
+			var isConnected = false;
 			
-
+			//These variables are just used for drawing
 			var coords = [];
 			var x0 = 450;
 			var y0 = 450;
@@ -22,6 +23,25 @@ $(document).ready( function() {
 
 			//Clear the canvas every time the button is clicked
 			ctx.clearRect(0, 0, 900, 900);
+
+			//Finds the edge that includes the vertex	
+			var findVertex = '';			
+			function findEdge(edge) {
+				return edge.includes(findVertex);
+			}
+
+			//Counts the number of degrees on each vertex
+			function countDegrees() {
+				for (var i = 0; i < vertices.length; i++) {
+					degrees[i] = 0;
+					for (var j = 0; j < edges.length; j++) {
+						//If the current edge element has the current vertex element in it, increment the number of degrees 
+						if (edges[j].split(vertices[i]).length > 1) {
+							degrees[i]++;
+						}
+					}
+				}
+			}
 
 			//Generate the vertices
 			for (var i = 0; i < numVertices; i++) {
@@ -38,6 +58,8 @@ $(document).ready( function() {
 				ctx.stroke();
 				ctx.closePath();
 				ctx.font = "15px Courier New";
+				x = x0 + (1.05 * r) * Math.cos(2 * Math.PI * i / vertices.length);
+				y = y0 + (1.05 * r) * Math.sin(2 * Math.PI * i / vertices.length);
 				ctx.fillText(vertices[i],x-4,y+5);
 			}
 
@@ -80,17 +102,8 @@ $(document).ready( function() {
 				//Alphabetize the whole array
 				edges.sort();
 
-				//Count degrees for each edge
-				for (var i = 0; i < vertices.length; i++) {
-					degrees[i] = 0;
-					for (var j = 0; j < edges.length; j++) {
-						if (edges[j].split(vertices[i]).length - 1 > 0) {
-							degrees[i]++;
-						}
-					}
-				}
-
 				//Count the number of odd degrees
+				countDegrees();
 				$.each(degrees, function(i) {
 					if (degrees[i] % 2 == 1) {
 						numOddDegrees += 1;
@@ -100,22 +113,31 @@ $(document).ready( function() {
 
 			console.log(edges);
 
-			switch (numOddDegrees) {
-				case 2:
-					console.log("There is a possible Euler path");
-					possiblePath = true;
+			//Test if the graph is connected
+			for (var i = 1; i < vertices.length; i++) {
+				findVertex = vertices[0];
+				if (edges.find(findEdge) != 'undefined') {
+					isConnected = true;
+				} else {
+					isConnected = false;
 					break;
-				default:
-					console.log("There is no possible Euler path");
-					possiblePath = false;
-					ctx.font="64px Courier New";
-					ctx.fillText("No possible Euler Path", 25, 400);
-					break;
+				}
+			}
+
+			if (numOddDegrees <= 2 && isConnected) {
+				console.log("There is a possible Euler path");
+				possiblePath = true;
+			} else {
+				console.log("There is no possible Euler path");
+				possiblePath = false;
+				ctx.font="64px Courier New";
+				ctx.fillText("No possible Euler Path", 25, 400);
 			}
 
 			if (possiblePath) {
-				//Find the index of the first vertex with odd degree
+				//Find the index of the first and last vertex with odd degree
 				var firstOdd = -1;
+				var lastOdd = -1;
 				var i = 0;
 				do {
 					if (degrees[i] % 2 == 1) {
@@ -123,31 +145,85 @@ $(document).ready( function() {
 					}
 					i++;
 				} while (firstOdd == -1);
-				
-				//Finds the first edge that includes the vertex
-				var vertex = vertices[firstOdd];
+				do {
+					if (degrees[i] % 2 == 1) {
+						lastOdd = i;
+					}
+					i++;
+				} while (lastOdd == -1);
 
-				function findEdge(edge) {
-					return edge.includes(vertex);
-				}
+				var vertex = vertices[firstOdd];
+				var endVertex = vertices[lastOdd];
 
 				//Display the start vertex
 				ctx.font = "20px Courier New";
 				ctx.fillText("START", coords[vertex.charCodeAt(0) - 97][0], coords[vertex.charCodeAt(0) - 97][1])
 
-				//Draw the edges
+				//Find the Euler Path
 				$.each(edges, function(i) {
+					//Move the pen to the current vertex
 					var x1 = coords[vertex.charCodeAt(0) - 97][0];
 					var y1 = coords[vertex.charCodeAt(0) - 97][1];
 					ctx.moveTo(x1, y1);
+
+					//Keep track of vertices that reach degree 0
+					countDegrees();
+					var connectedVertices = [];
+					for (var j = 0; j < vertices.length; j++) {
+						if (degrees[j] > 0) {
+							connectedVertices.push(vertices[j]);
+						}
+					}
+
 					//Follow the first edge at our current vertex
-					path[i] = edges.find(findEdge);
+					findVertex = vertex;
+					var nextEdge = edges.find(findEdge);
+
+					var tempEdges = [];
+
+					//De-prioritize the last vertex
+					if (vertex != endVertex) {
+						if (nextEdge[0] == endVertex || nextEdge[1] == endVertex) {
+							//Create a copy of edges array
+							tempEdges = edges.slice(0);
+							tempEdges.splice(tempEdges.indexOf(nextEdge), 1);
+							nextEdge = tempEdges.find(findEdge);
+						} 
+					}
+
+					//Check if the deletion of the edge would disconnect the graph
+					tempEdges = edges.slice(0);
+					tempEdges.splice(tempEdges.indexOf(nextEdge), 1);
+					for (var j = 1; j < vertices.length; j++) {
+						findVertex = vertices[0];
+						if (tempEdges.find(findEdge) != 'undefined') {
+							isConnected = true;
+						} else {
+							isConnected = false;
+							break;
+						}
+					}
+
+					//If the graph will disconnect, find a new edge to follow
+					if (!isConnected) {
+						nextEdge = tempEdges.find(findEdge);
+					}
+
+					if (typeof nextEdge != 'undefined') {
+						path[i] = nextEdge;
+					} else {
+						findVertex = vertex;
+						path[i] = edges.find(findEdge);
+					}
+
 					//Update the current vertex
 					if (path[i][0] == vertex) {
 						vertex = path[i][1];
 					} else {
 						vertex = path[i][0];
 					}
+
+					//Draw the edge
 					var x2 = coords[vertex.charCodeAt(0) - 97][0];
 					var y2 = coords[vertex.charCodeAt(0) - 97][1];
 					ctx.lineTo(x2, y2);
